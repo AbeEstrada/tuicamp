@@ -7,12 +7,12 @@ import (
 )
 
 type MeResponse struct {
-	UserID       string              `json:"user_id"`
+	UserID       string              `json:"user_id"` // string or integer
 	Email        string              `json:"email"`
 	RegisterTime string              `json:"register_time"`
-	DisplayName  string              `json:"display_name"`
-	SynchTime    string              `json:"synch_time"`
-	RootGroupID  string              `json:"root_group_id"`
+	DisplayName  string              `json:"display_name"`  // nullable
+	SynchTime    string              `json:"synch_time"`    // nullable
+	RootGroupID  string              `json:"root_group_id"` // string or integer
 	Permissions  PermissionsResponse `json:"permissions"`
 }
 
