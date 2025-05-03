@@ -10,9 +10,10 @@ import (
 )
 
 const ( // Windows
-	Calendar = 0 // Top Left
-	Timer    = 1 // Top Right
-	Content  = 2 // Bottom
+	User     = 0 // Top
+	Calendar = 1 // Middle Left
+	Timer    = 2 // Middle Right
+	Content  = 3 // Bottom
 )
 
 type App struct {
@@ -41,6 +42,7 @@ type App struct {
 	timerTicker *time.Ticker
 	timerDone   chan struct{}
 
+	me      MeResponse
 	timers  []TimersRunningResponse
 	entries []EntryResponse
 }
@@ -69,6 +71,7 @@ func main() {
 		selectedDate:  now,
 	}
 	app.apiClient = NewAPIClient("https://app.timecamp.com/third_party/api")
+	app.fetchMe()
 	app.fetchEntries(app.selectedDate)
 	app.fetchTimers()
 
@@ -100,8 +103,10 @@ func (app *App) draw() {
 	}
 	unfocusedStyle := vaxis.Style{}
 
-	calendarStyle, timerStyle, contentStyle := unfocusedStyle, unfocusedStyle, unfocusedStyle
+	userStyle, calendarStyle, timerStyle, contentStyle := unfocusedStyle, unfocusedStyle, unfocusedStyle, unfocusedStyle
 	switch app.focusedWindow {
+	case User:
+		userStyle = unfocusedStyle
 	case Calendar:
 		calendarStyle = focusedStyle
 	case Timer:
@@ -110,15 +115,19 @@ func (app *App) draw() {
 		contentStyle = focusedStyle
 	}
 
-	calendarWin := mainWin.New(0, 0, app.calendarCols, app.calendarRows)
+	userWin := mainWin.New(0, 0, app.totalCols, 3)
+	userWin = border.All(userWin, userStyle)
+	app.drawUserWindow(userWin)
+
+	calendarWin := mainWin.New(0, 3, app.calendarCols, app.calendarRows)
 	calendarWin = border.All(calendarWin, calendarStyle)
 	app.drawCalendarWindow(calendarWin)
 
-	timerWin := mainWin.New(app.calendarCols, 0, app.totalCols-app.calendarCols, app.calendarRows)
+	timerWin := mainWin.New(app.calendarCols, 3, app.totalCols-app.calendarCols, app.calendarRows)
 	timerWin = border.All(timerWin, timerStyle)
 	app.drawTimerWindow(timerWin)
 
-	contentWin := mainWin.New(0, app.calendarRows, app.totalCols, app.contentRows)
+	contentWin := mainWin.New(0, app.calendarRows+3, app.totalCols, app.contentRows)
 	contentWin = border.All(contentWin, contentStyle)
 	app.drawContentWindow(contentWin)
 
@@ -167,7 +176,7 @@ func (app *App) handleKey(key vaxis.Key) bool {
 	}
 
 	if key.Matches(vaxis.KeyTab) && !app.showQuitConfirm {
-		app.focusedWindow = (app.focusedWindow + 1) % 3
+		app.focusedWindow = (app.focusedWindow % 3) + 1
 	}
 
 	if app.focusedWindow == Calendar && !app.showQuitConfirm {
