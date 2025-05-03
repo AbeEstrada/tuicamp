@@ -82,7 +82,6 @@ func main() {
 			cols, rows := vx.Window().Size()
 			app.calendarCols = 22
 			app.calendarRows = 10
-			// app.contentCols = cols
 			app.contentRows = rows - app.calendarRows
 			app.totalCols = cols
 			app.totalRows = rows
@@ -174,9 +173,7 @@ func (app *App) handleKey(key vaxis.Key) bool {
 	if app.focusedWindow == Calendar && !app.showQuitConfirm {
 		year, month, _ := app.currentMonth.Date()
 		daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
-		// firstDay := time.Date(year, month, 1, 0, 0, 0, 0, app.currentMonth.Location())
-		// firstDayOfWeek := int(firstDay.Weekday())
-		// currentDayOfWeek := (firstDayOfWeek + app.cursorDay - 1) % 7
+
 		if key.Matches('L') {
 			app.focusedWindow = Timer
 		} else if key.Matches('J') {
@@ -193,44 +190,12 @@ func (app *App) handleKey(key vaxis.Key) bool {
 			// Move up a week
 			if app.cursorDay > 7 {
 				app.cursorDay -= 7
-			} /* else {
-				// Go to previous month
-				prevMonth := time.Date(year, month-1, 1, 0, 0, 0, 0, app.currentMonth.Location())
-				daysInPrevMonth := time.Date(prevMonth.Year(), prevMonth.Month()+1, 0, 0, 0, 0, 0, prevMonth.Location()).Day()
-				// Find all days in previous month that fall on the same weekday
-				var daysOnSameWeekday []int
-				for day := 1; day <= daysInPrevMonth; day++ {
-					date := time.Date(prevMonth.Year(), prevMonth.Month(), day, 0, 0, 0, 0, prevMonth.Location())
-					if int(date.Weekday()) == currentDayOfWeek {
-						daysOnSameWeekday = append(daysOnSameWeekday, day)
-					}
-				}
-				// Find the last occurrence of the weekday in the previous month
-				newDay := daysOnSameWeekday[len(daysOnSameWeekday)-1]
-				app.currentMonth = prevMonth
-				app.cursorDay = newDay
-			}*/
+			}
 		} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
 			// Move down a week
 			if app.cursorDay+7 <= daysInMonth {
 				app.cursorDay += 7
-			} /* else {
-				// Go to next month
-				nextMonth := time.Date(year, month+1, 1, 0, 0, 0, 0, app.currentMonth.Location())
-				daysInNextMonth := time.Date(nextMonth.Year(), nextMonth.Month()+1, 0, 0, 0, 0, 0, nextMonth.Location()).Day()
-				// Find all days in next month that fall on the same weekday
-				var daysOnSameWeekday []int
-				for day := 1; day <= daysInNextMonth; day++ {
-					date := time.Date(nextMonth.Year(), nextMonth.Month(), day, 0, 0, 0, 0, nextMonth.Location())
-					if int(date.Weekday()) == currentDayOfWeek {
-						daysOnSameWeekday = append(daysOnSameWeekday, day)
-					}
-				}
-				// Find the first occurrence of the weekday in the next month
-				newDay := daysOnSameWeekday[0]
-				app.currentMonth = nextMonth
-				app.cursorDay = newDay
-			}*/
+			}
 		} else if key.Matches('g') || key.Matches(vaxis.KeyHome) {
 			// First day of month
 			app.cursorDay = 1
@@ -264,27 +229,7 @@ func (app *App) handleKey(key vaxis.Key) bool {
 	} else if app.focusedWindow == Content && !app.showQuitConfirm {
 		if key.Matches('K') {
 			app.focusedWindow = Calendar
-		} /* else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
-			if len(app.entries) > 0 {
-				for i, item := range app.entries {
-					if item.Selected && i < len(app.entries)-1 {
-						app.entries[i].Selected = false
-						app.entries[i+1].Selected = true
-						break
-					}
-				}
-			}
-		} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
-			if len(app.entries) > 0 {
-				for i, item := range app.entries {
-					if item.Selected && i > 0 {
-						app.entries[i].Selected = false
-						app.entries[i-1].Selected = true
-						break
-					}
-				}
-			}
-		}*/
+		}
 	} else if app.focusedWindow == Timer && !app.showQuitConfirm {
 		if key.Matches('H') {
 			app.focusedWindow = Calendar
