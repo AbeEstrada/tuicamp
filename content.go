@@ -62,9 +62,7 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 			totalDuration += elapsedTime
 			duration = elapsedTime.String()
 		}
-		selectedStyle := vaxis.Style{
-			// Attribute: vaxis.AttrBold,
-		}
+		selectedStyle := vaxis.Style{}
 		if i+app.contentCursor == app.selectedEntry && app.focusedWindow == Content {
 			selectedStyle = vaxis.Style{
 				Attribute: vaxis.AttrReverse,
@@ -76,7 +74,7 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 		}
 		name := entry.Name
 		if entry.Name != "" {
-			name = " [" + entry.Name + "] "
+			name = " [" + entry.Name + "]"
 		}
 		win.Println(row,
 			vaxis.Segment{
@@ -111,7 +109,7 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 				},
 			},
 			vaxis.Segment{
-				Text: entry.Description,
+				Text: " " + entry.Description,
 			},
 		)
 	}

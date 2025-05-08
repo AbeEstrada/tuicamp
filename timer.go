@@ -141,9 +141,7 @@ func (app *App) drawTimerWindow(win vaxis.Window) {
 		buttonText = "Stop timer ■"
 	}
 	focusedStyle := vaxis.Style{
-		Foreground: vaxis.IndexColor(0),
-		Background: vaxis.IndexColor(7),
-		Attribute:  vaxis.AttrBold,
+		Attribute: vaxis.AttrReverse,
 	}
 	buttonStyle := vaxis.Style{
 		Attribute: vaxis.AttrBold,
