@@ -62,6 +62,14 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 			totalDuration += elapsedTime
 			duration = elapsedTime.String()
 		}
+		selectedStyle := vaxis.Style{
+			// Attribute: vaxis.AttrBold,
+		}
+		if i+app.contentCursor == app.selectedEntry && app.focusedWindow == Content {
+			selectedStyle = vaxis.Style{
+				Attribute: vaxis.AttrReverse,
+			}
+		}
 		endTime := " - " + entry.EndTime
 		if entry.StartTime == entry.EndTime {
 			endTime = ""
@@ -81,15 +89,25 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 			vaxis.Segment{
 				Text: fmt.Sprintf("%-10s", duration),
 				Style: vaxis.Style{
-					Attribute: vaxis.AttrBold,
+					Attribute: selectedStyle.Attribute,
 				},
 			},
-			vaxis.Segment{Text: entry.StartTime},
-			vaxis.Segment{Text: endTime},
+			vaxis.Segment{
+				Text: entry.StartTime,
+				Style: vaxis.Style{
+					Attribute: selectedStyle.Attribute,
+				},
+			},
+			vaxis.Segment{
+				Text: endTime,
+				Style: vaxis.Style{
+					Attribute: selectedStyle.Attribute,
+				},
+			},
 			vaxis.Segment{
 				Text: name,
 				Style: vaxis.Style{
-					Attribute: vaxis.AttrBold,
+					Attribute: selectedStyle.Attribute,
 				},
 			},
 			vaxis.Segment{
@@ -125,6 +143,8 @@ func (app *App) fetchEntries(date time.Time) error {
 		return fmt.Errorf("failed API response: %w", result.Error)
 	}
 	app.entries = allEntries
+	app.selectedEntry = 0
+	app.contentCursor = 0
 	return nil
 }
 

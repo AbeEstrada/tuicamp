@@ -24,8 +24,10 @@ type App struct {
 	totalCols int
 	totalRows int
 
-	contentCols int
-	contentRows int
+	contentCols   int
+	contentRows   int
+	contentCursor int
+	selectedEntry int
 
 	calendarCols int
 	calendarRows int
@@ -239,6 +241,21 @@ func (app *App) handleKey(key vaxis.Key) bool {
 	} else if app.focusedWindow == Content && !app.showQuitConfirm {
 		if key.Matches('K') {
 			app.focusedWindow = Calendar
+		} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
+			if app.selectedEntry < len(app.entries)-1 {
+				app.selectedEntry++
+				visibleRows := app.contentRows - 3 // Account for header and footer
+				if app.selectedEntry >= app.contentCursor+visibleRows {
+					app.contentCursor = app.selectedEntry - visibleRows + 1
+				}
+			}
+		} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
+			if app.selectedEntry > 0 {
+				app.selectedEntry--
+				if app.selectedEntry < app.contentCursor {
+					app.contentCursor = app.selectedEntry
+				}
+			}
 		}
 	} else if app.focusedWindow == Timer && !app.showQuitConfirm {
 		if key.Matches('H') {
