@@ -21,26 +21,27 @@ type App struct {
 	focusedWindow   int
 	showQuitConfirm bool
 
-	apiToken  string
-	apiClient *APIClient
+	totalCols int
+	totalRows int
+
+	contentCols int
+	contentRows int
 
 	calendarCols int
 	calendarRows int
-	timerCols    int
-	timerRows    int
-	contentCols  int
-	contentRows  int
-	totalCols    int
-	totalRows    int
-
 	currentMonth time.Time
 	cursorDay    int
 	selectedDay  int
 	selectedDate time.Time
 
+	timerCols   int
+	timerRows   int
 	elapsedTime time.Duration
 	timerTicker *time.Ticker
 	timerDone   chan struct{}
+
+	apiToken  string
+	apiClient *APIClient
 
 	me      MeResponse
 	timers  []TimersRunningResponse
