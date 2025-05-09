@@ -21,9 +21,6 @@ type App struct {
 	focusedWindow   int
 	showQuitConfirm bool
 
-	totalCols int
-	totalRows int
-
 	contentCols   int
 	contentRows   int
 	contentCursor int
@@ -36,8 +33,6 @@ type App struct {
 	selectedDay  int
 	selectedDate time.Time
 
-	timerCols   int
-	timerRows   int
 	elapsedTime time.Duration
 	timerTicker *time.Ticker
 	timerDone   chan struct{}
@@ -79,13 +74,21 @@ func main() {
 	app.fetchEntries(app.selectedDate)
 	app.fetchTimers()
 
+	app.UpdateDimensions()
+
 	for ev := range vx.Events() {
 		if app.HandleEvent(ev) {
 			break // Exit the application
 		}
-		app.draw()
+		app.Draw()
 	}
-	app.UpdateDimensions()
+}
+
+func (app *App) UpdateDimensions() {
+	_, rows := app.vx.Window().Size()
+	app.calendarCols = 22
+	app.calendarRows = 10
+	app.contentRows = rows - app.calendarRows
 }
 
 func (app *App) createStyledWindow(parent vaxis.Window, x, y, width, height int, isFocused bool) vaxis.Window {
@@ -100,25 +103,22 @@ func (app *App) createStyledWindow(parent vaxis.Window, x, y, width, height int,
 	return border.All(win, style)
 }
 
-func (app *App) draw() {
+func (app *App) Draw() {
 	mainWin := app.vx.Window()
 	mainWin.Clear()
 
-	userWin := app.createStyledWindow(mainWin, 0, 0, app.totalCols, 3, app.focusedWindow == User)
+	cols, _ := app.vx.Window().Size()
+
+	userWin := app.createStyledWindow(mainWin, 0, 0, cols, 3, app.focusedWindow == User)
 	app.drawUserWindow(userWin)
 
-	calendarWin := app.createStyledWindow(mainWin, 0, 3, app.calendarCols, app.calendarRows,
-		app.focusedWindow == Calendar)
+	calendarWin := app.createStyledWindow(mainWin, 0, 3, app.calendarCols, app.calendarRows, app.focusedWindow == Calendar)
 	app.drawCalendarWindow(calendarWin)
 
-	timerWin := app.createStyledWindow(mainWin, app.calendarCols, 3,
-		app.totalCols-app.calendarCols, app.calendarRows,
-		app.focusedWindow == Timer)
+	timerWin := app.createStyledWindow(mainWin, app.calendarCols, 3, cols-app.calendarCols, app.calendarRows, app.focusedWindow == Timer)
 	app.drawTimerWindow(timerWin)
 
-	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+3,
-		app.totalCols, app.contentRows,
-		app.focusedWindow == Content)
+	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+3, cols, app.contentRows, app.focusedWindow == Content)
 	app.drawContentWindow(contentWin)
 
 	if app.showQuitConfirm {
@@ -147,15 +147,6 @@ func drawQuitConfirmation(win vaxis.Window) {
 			},
 		},
 	)
-}
-
-func (app *App) UpdateDimensions() {
-	cols, rows := app.vx.Window().Size()
-	app.totalCols = cols
-	app.totalRows = rows
-	app.calendarCols = 22
-	app.calendarRows = 10
-	app.contentRows = rows - app.calendarRows
 }
 
 func (app *App) HandleEvent(ev vaxis.Event) bool {

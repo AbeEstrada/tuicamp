@@ -45,7 +45,9 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 
 	scrollOffset := 0
 
-	visibleEntries := calculateVisibleEntries(app.entries, scrollOffset, app.totalRows)
+	_, rows := app.vx.Window().Size()
+
+	visibleEntries := calculateVisibleEntries(app.entries, scrollOffset, rows)
 	var totalDuration time.Duration
 	for i, entry := range visibleEntries {
 		row := i + 2 // +1 to account for title row
