@@ -95,3 +95,64 @@ func (app *App) drawCalendarWindow(win vaxis.Window) {
 		win.Println(row+weekRow, segments...)
 	}
 }
+
+func (app *App) handleCalendarKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
+		return false
+	}
+	year, month, _ := app.currentMonth.Date()
+	daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
+
+	if key.Matches('L') {
+		app.focusedWindow = Timer
+	} else if key.Matches('J') {
+		app.focusedWindow = Content
+	} else if key.Matches('h') || key.Matches(vaxis.KeyLeft) {
+		if app.cursorDay > 1 {
+			app.cursorDay--
+		}
+	} else if key.Matches('l') || key.Matches(vaxis.KeyRight) {
+		if app.cursorDay < daysInMonth {
+			app.cursorDay++
+		}
+	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
+		// Move up a week
+		if app.cursorDay > 7 {
+			app.cursorDay -= 7
+		}
+	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
+		// Move down a week
+		if app.cursorDay+7 <= daysInMonth {
+			app.cursorDay += 7
+		}
+	} else if key.Matches('g') || key.Matches(vaxis.KeyHome) {
+		// First day of month
+		app.cursorDay = 1
+	} else if key.Matches('G') || key.Matches(vaxis.KeyEnd) {
+		// Last day of month
+		app.cursorDay = daysInMonth
+	} else if key.Matches('p') || key.Matches(vaxis.KeyPgUp) {
+		// Previous month
+		app.currentMonth = time.Date(year, month-1, 1, 0, 0, 0, 0, app.currentMonth.Location())
+		if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
+			app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
+		}
+	} else if key.Matches('n') || key.Matches(vaxis.KeyPgDown) {
+		// Next month
+		app.currentMonth = time.Date(year, month+1, 1, 0, 0, 0, 0, app.currentMonth.Location())
+		if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
+			app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
+		}
+	} else if key.Matches('t') {
+		// Today
+		now := time.Now()
+		app.currentMonth = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		app.cursorDay = now.Day()
+	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
+		app.selectedDay = app.cursorDay
+		app.selectedDate = time.Date(year, month, app.selectedDay, 0, 0, 0, 0, app.currentMonth.Location())
+		app.fetchEntries(app.selectedDate)
+		app.fetchTimers()
+	}
+	return false
+}

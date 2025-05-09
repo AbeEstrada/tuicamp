@@ -125,6 +125,31 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 	}
 }
 
+func (app *App) handleContentKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
+		return false
+	}
+	if key.Matches('K') {
+		app.focusedWindow = Calendar
+	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
+		if app.selectedEntry < len(app.entries)-1 {
+			app.selectedEntry++
+			visibleRows := app.contentRows - 3 // Account for header and footer
+			if app.selectedEntry >= app.contentCursor+visibleRows {
+				app.contentCursor = app.selectedEntry - visibleRows + 1
+			}
+		}
+	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
+		if app.selectedEntry > 0 {
+			app.selectedEntry--
+			if app.selectedEntry < app.contentCursor {
+				app.contentCursor = app.selectedEntry
+			}
+		}
+	}
+	return false
+}
+
 func (app *App) fetchEntries(date time.Time) error {
 	var allEntries []EntryResponse
 	year := date.Year()

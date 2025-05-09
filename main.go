@@ -179,8 +179,6 @@ func (app *App) HandleKeyEvent(key vaxis.Key) bool {
 		return app.handleContentKeys(key)
 	case Timer:
 		return app.handleTimerKeys(key)
-	case User:
-		return app.handleUserKeys()
 	}
 	return false
 }
@@ -204,113 +202,5 @@ func (app *App) handleGlobalKeys(key vaxis.Key) bool {
 	if key.Matches(vaxis.KeyTab) {
 		app.focusedWindow = (app.focusedWindow % 3) + 1
 	}
-	return false
-}
-
-func (app *App) handleCalendarKeys(key vaxis.Key) bool {
-	if app.showQuitConfirm {
-		return false
-	}
-	year, month, _ := app.currentMonth.Date()
-	daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
-
-	if key.Matches('L') {
-		app.focusedWindow = Timer
-	} else if key.Matches('J') {
-		app.focusedWindow = Content
-	} else if key.Matches('h') || key.Matches(vaxis.KeyLeft) {
-		if app.cursorDay > 1 {
-			app.cursorDay--
-		}
-	} else if key.Matches('l') || key.Matches(vaxis.KeyRight) {
-		if app.cursorDay < daysInMonth {
-			app.cursorDay++
-		}
-	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
-		// Move up a week
-		if app.cursorDay > 7 {
-			app.cursorDay -= 7
-		}
-	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
-		// Move down a week
-		if app.cursorDay+7 <= daysInMonth {
-			app.cursorDay += 7
-		}
-	} else if key.Matches('g') || key.Matches(vaxis.KeyHome) {
-		// First day of month
-		app.cursorDay = 1
-	} else if key.Matches('G') || key.Matches(vaxis.KeyEnd) {
-		// Last day of month
-		app.cursorDay = daysInMonth
-	} else if key.Matches('p') || key.Matches(vaxis.KeyPgUp) {
-		// Previous month
-		app.currentMonth = time.Date(year, month-1, 1, 0, 0, 0, 0, app.currentMonth.Location())
-		if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
-			app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
-		}
-	} else if key.Matches('n') || key.Matches(vaxis.KeyPgDown) {
-		// Next month
-		app.currentMonth = time.Date(year, month+1, 1, 0, 0, 0, 0, app.currentMonth.Location())
-		if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
-			app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
-		}
-	} else if key.Matches('t') {
-		// Today
-		now := time.Now()
-		app.currentMonth = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-		app.cursorDay = now.Day()
-	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
-		app.selectedDay = app.cursorDay
-		app.selectedDate = time.Date(year, month, app.selectedDay, 0, 0, 0, 0, app.currentMonth.Location())
-		app.fetchEntries(app.selectedDate)
-		app.fetchTimers()
-	}
-	return false
-}
-
-func (app *App) handleContentKeys(key vaxis.Key) bool {
-	if app.showQuitConfirm {
-		return false
-	}
-	if key.Matches('K') {
-		app.focusedWindow = Calendar
-	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
-		if app.selectedEntry < len(app.entries)-1 {
-			app.selectedEntry++
-			visibleRows := app.contentRows - 3 // Account for header and footer
-			if app.selectedEntry >= app.contentCursor+visibleRows {
-				app.contentCursor = app.selectedEntry - visibleRows + 1
-			}
-		}
-	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
-		if app.selectedEntry > 0 {
-			app.selectedEntry--
-			if app.selectedEntry < app.contentCursor {
-				app.contentCursor = app.selectedEntry
-			}
-		}
-	}
-	return false
-}
-
-func (app *App) handleTimerKeys(key vaxis.Key) bool {
-	if app.showQuitConfirm {
-		return false
-	}
-	if key.Matches('H') {
-		app.focusedWindow = Calendar
-	} else if key.Matches('J') {
-		app.focusedWindow = Content
-	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
-		if len(app.timers) > 0 {
-			app.stopTimers()
-		} else {
-			app.startTimer()
-		}
-	}
-	return false
-}
-
-func (app *App) handleUserKeys() bool {
 	return false
 }

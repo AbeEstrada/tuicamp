@@ -166,3 +166,21 @@ func (app *App) drawTimerWindow(win vaxis.Window) {
 		win.Println(6, vaxis.Segment{Text: elapsedText})
 	}
 }
+
+func (app *App) handleTimerKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
+		return false
+	}
+	if key.Matches('H') {
+		app.focusedWindow = Calendar
+	} else if key.Matches('J') {
+		app.focusedWindow = Content
+	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
+		if len(app.timers) > 0 {
+			app.stopTimers()
+		} else {
+			app.startTimer()
+		}
+	}
+	return false
+}
