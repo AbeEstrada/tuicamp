@@ -21,6 +21,8 @@ type App struct {
 	focusedWindow   int
 	showQuitConfirm bool
 
+	userRows int
+
 	contentCols   int
 	contentRows   int
 	contentCursor int
@@ -86,6 +88,7 @@ func main() {
 
 func (app *App) UpdateDimensions() {
 	_, rows := app.vx.Window().Size()
+	app.userRows = 3
 	app.calendarCols = 22
 	app.calendarRows = 10
 	app.contentRows = rows - app.calendarRows
@@ -109,16 +112,16 @@ func (app *App) Draw() {
 
 	cols, _ := app.vx.Window().Size()
 
-	userWin := app.createStyledWindow(mainWin, 0, 0, cols, 3, app.focusedWindow == User)
+	userWin := app.createStyledWindow(mainWin, 0, 0, cols, app.userRows, app.focusedWindow == User)
 	app.drawUserWindow(userWin)
 
-	calendarWin := app.createStyledWindow(mainWin, 0, 3, app.calendarCols, app.calendarRows, app.focusedWindow == Calendar)
+	calendarWin := app.createStyledWindow(mainWin, 0, app.userRows, app.calendarCols, app.calendarRows, app.focusedWindow == Calendar)
 	app.drawCalendarWindow(calendarWin)
 
-	timerWin := app.createStyledWindow(mainWin, app.calendarCols, 3, cols-app.calendarCols, app.calendarRows, app.focusedWindow == Timer)
+	timerWin := app.createStyledWindow(mainWin, app.calendarCols, app.userRows, cols-app.calendarCols, app.calendarRows, app.focusedWindow == Timer)
 	app.drawTimerWindow(timerWin)
 
-	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+3, cols, app.contentRows, app.focusedWindow == Content)
+	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+app.userRows, cols, app.contentRows, app.focusedWindow == Content)
 	app.drawContentWindow(contentWin)
 
 	if app.showQuitConfirm {
