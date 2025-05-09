@@ -73,65 +73,52 @@ func main() {
 		selectedDay:   now.Day(),
 		selectedDate:  now,
 	}
+
 	app.apiClient = NewAPIClient("https://app.timecamp.com/third_party/api")
 	app.fetchMe()
 	app.fetchEntries(app.selectedDate)
 	app.fetchTimers()
 
 	for ev := range vx.Events() {
-		switch ev := ev.(type) {
-		case vaxis.Key:
-			if app.handleKey(ev) {
-				return
-			}
-		case vaxis.Resize:
-			cols, rows := vx.Window().Size()
-			app.calendarCols = 22
-			app.calendarRows = 10
-			app.contentRows = rows - app.calendarRows
-			app.totalCols = cols
-			app.totalRows = rows
+		if app.HandleEvent(ev) {
+			break // Exit the application
 		}
 		app.draw()
 	}
+	app.UpdateDimensions()
+}
+
+func (app *App) createStyledWindow(parent vaxis.Window, x, y, width, height int, isFocused bool) vaxis.Window {
+	win := parent.New(x, y, width, height)
+	style := vaxis.Style{}
+	if isFocused {
+		style = vaxis.Style{
+			Foreground: vaxis.IndexColor(4),
+			Attribute:  vaxis.AttrBold,
+		}
+	}
+	return border.All(win, style)
 }
 
 func (app *App) draw() {
 	mainWin := app.vx.Window()
 	mainWin.Clear()
 
-	focusedStyle := vaxis.Style{
-		Foreground: vaxis.IndexColor(4),
-		Attribute:  vaxis.AttrBold,
-	}
-	unfocusedStyle := vaxis.Style{}
-
-	userStyle, calendarStyle, timerStyle, contentStyle := unfocusedStyle, unfocusedStyle, unfocusedStyle, unfocusedStyle
-	switch app.focusedWindow {
-	case User:
-		userStyle = unfocusedStyle
-	case Calendar:
-		calendarStyle = focusedStyle
-	case Timer:
-		timerStyle = focusedStyle
-	case Content:
-		contentStyle = focusedStyle
-	}
-
-	userWin := mainWin.New(0, 0, app.totalCols, 3)
-	userWin = border.All(userWin, userStyle)
+	userWin := app.createStyledWindow(mainWin, 0, 0, app.totalCols, 3, app.focusedWindow == User)
 	app.drawUserWindow(userWin)
 
-	calendarWin := mainWin.New(0, 3, app.calendarCols, app.calendarRows)
-	calendarWin = border.All(calendarWin, calendarStyle)
+	calendarWin := app.createStyledWindow(mainWin, 0, 3, app.calendarCols, app.calendarRows,
+		app.focusedWindow == Calendar)
 	app.drawCalendarWindow(calendarWin)
 
-	timerWin := mainWin.New(app.calendarCols, 3, app.totalCols-app.calendarCols, app.calendarRows)
-	timerWin = border.All(timerWin, timerStyle)
+	timerWin := app.createStyledWindow(mainWin, app.calendarCols, 3,
+		app.totalCols-app.calendarCols, app.calendarRows,
+		app.focusedWindow == Timer)
 	app.drawTimerWindow(timerWin)
 
-	contentWin := mainWin.New(0, app.calendarRows+3, app.totalCols, app.contentRows)
-	contentWin = border.All(contentWin, contentStyle)
+	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+3,
+		app.totalCols, app.contentRows,
+		app.focusedWindow == Content)
 	app.drawContentWindow(contentWin)
 
 	if app.showQuitConfirm {
@@ -162,114 +149,168 @@ func drawQuitConfirmation(win vaxis.Window) {
 	)
 }
 
-func (app *App) handleKey(key vaxis.Key) bool {
-	if !app.showQuitConfirm {
-		if key.Matches('q') {
-			app.showQuitConfirm = true
-		} else if key.Matches('c', vaxis.ModCtrl) {
-			return true
-		}
-	} else {
+func (app *App) UpdateDimensions() {
+	cols, rows := app.vx.Window().Size()
+	app.totalCols = cols
+	app.totalRows = rows
+	app.calendarCols = 22
+	app.calendarRows = 10
+	app.contentRows = rows - app.calendarRows
+}
+
+func (app *App) HandleEvent(ev vaxis.Event) bool {
+	switch ev := ev.(type) {
+	case vaxis.Key:
+		return app.HandleKeyEvent(ev)
+	case vaxis.Resize:
+		app.UpdateDimensions()
+	}
+	return false
+}
+
+func (app *App) HandleKeyEvent(key vaxis.Key) bool {
+	if app.handleGlobalKeys(key) {
+		return true
+	}
+	switch app.focusedWindow {
+	case Calendar:
+		return app.handleCalendarKeys(key)
+	case Content:
+		return app.handleContentKeys(key)
+	case Timer:
+		return app.handleTimerKeys(key)
+	case User:
+		return app.handleUserKeys()
+	}
+	return false
+}
+
+func (app *App) handleGlobalKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
 		if key.Matches('y') || key.Matches(vaxis.KeyEnter) {
 			return true // Confirm quit
 		} else if key.Matches('n') || key.Matches(vaxis.KeyEsc) || key.Matches('q') {
 			app.showQuitConfirm = false
-			return false
 		}
+		return false
 	}
-
-	if key.Matches(vaxis.KeyTab) && !app.showQuitConfirm {
+	if key.Matches('q') {
+		app.showQuitConfirm = true
+		return false
+	}
+	if key.Matches('c', vaxis.ModCtrl) {
+		return true // Exit application
+	}
+	if key.Matches(vaxis.KeyTab) {
 		app.focusedWindow = (app.focusedWindow % 3) + 1
 	}
+	return false
+}
 
-	if app.focusedWindow == Calendar && !app.showQuitConfirm {
-		year, month, _ := app.currentMonth.Date()
-		daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
+func (app *App) handleCalendarKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
+		return false
+	}
+	year, month, _ := app.currentMonth.Date()
+	daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
 
-		if key.Matches('L') {
-			app.focusedWindow = Timer
-		} else if key.Matches('J') {
-			app.focusedWindow = Content
-		} else if key.Matches('h') || key.Matches(vaxis.KeyLeft) {
-			if app.cursorDay > 1 {
-				app.cursorDay--
-			}
-		} else if key.Matches('l') || key.Matches(vaxis.KeyRight) {
-			if app.cursorDay < daysInMonth {
-				app.cursorDay++
-			}
-		} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
-			// Move up a week
-			if app.cursorDay > 7 {
-				app.cursorDay -= 7
-			}
-		} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
-			// Move down a week
-			if app.cursorDay+7 <= daysInMonth {
-				app.cursorDay += 7
-			}
-		} else if key.Matches('g') || key.Matches(vaxis.KeyHome) {
-			// First day of month
-			app.cursorDay = 1
-		} else if key.Matches('G') || key.Matches(vaxis.KeyEnd) {
-			// Last day of month
-			app.cursorDay = daysInMonth
-		} else if key.Matches('p') || key.Matches(vaxis.KeyPgUp) {
-			// Previous month
-			app.currentMonth = time.Date(year, month-1, 1, 0, 0, 0, 0, app.currentMonth.Location())
-			if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
-				app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
-			}
-		} else if key.Matches('n') || key.Matches(vaxis.KeyPgDown) {
-			// Next month
-			app.currentMonth = time.Date(year, month+1, 1, 0, 0, 0, 0, app.currentMonth.Location())
-			if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
-				app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
-			}
-		} else if key.Matches('t') {
-			// Today
-			now := time.Now()
-			app.currentMonth = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-			app.cursorDay = now.Day()
-		} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
-			app.selectedDay = app.cursorDay
-			app.selectedDate = time.Date(year, month, app.selectedDay, 0, 0, 0, 0, app.currentMonth.Location())
-			app.fetchEntries(app.selectedDate)
-			app.fetchTimers()
-
+	if key.Matches('L') {
+		app.focusedWindow = Timer
+	} else if key.Matches('J') {
+		app.focusedWindow = Content
+	} else if key.Matches('h') || key.Matches(vaxis.KeyLeft) {
+		if app.cursorDay > 1 {
+			app.cursorDay--
 		}
-	} else if app.focusedWindow == Content && !app.showQuitConfirm {
-		if key.Matches('K') {
-			app.focusedWindow = Calendar
-		} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
-			if app.selectedEntry < len(app.entries)-1 {
-				app.selectedEntry++
-				visibleRows := app.contentRows - 3 // Account for header and footer
-				if app.selectedEntry >= app.contentCursor+visibleRows {
-					app.contentCursor = app.selectedEntry - visibleRows + 1
-				}
-			}
-		} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
-			if app.selectedEntry > 0 {
-				app.selectedEntry--
-				if app.selectedEntry < app.contentCursor {
-					app.contentCursor = app.selectedEntry
-				}
+	} else if key.Matches('l') || key.Matches(vaxis.KeyRight) {
+		if app.cursorDay < daysInMonth {
+			app.cursorDay++
+		}
+	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
+		// Move up a week
+		if app.cursorDay > 7 {
+			app.cursorDay -= 7
+		}
+	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
+		// Move down a week
+		if app.cursorDay+7 <= daysInMonth {
+			app.cursorDay += 7
+		}
+	} else if key.Matches('g') || key.Matches(vaxis.KeyHome) {
+		// First day of month
+		app.cursorDay = 1
+	} else if key.Matches('G') || key.Matches(vaxis.KeyEnd) {
+		// Last day of month
+		app.cursorDay = daysInMonth
+	} else if key.Matches('p') || key.Matches(vaxis.KeyPgUp) {
+		// Previous month
+		app.currentMonth = time.Date(year, month-1, 1, 0, 0, 0, 0, app.currentMonth.Location())
+		if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
+			app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
+		}
+	} else if key.Matches('n') || key.Matches(vaxis.KeyPgDown) {
+		// Next month
+		app.currentMonth = time.Date(year, month+1, 1, 0, 0, 0, 0, app.currentMonth.Location())
+		if app.cursorDay > time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day() {
+			app.cursorDay = time.Date(app.currentMonth.Year(), app.currentMonth.Month()+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
+		}
+	} else if key.Matches('t') {
+		// Today
+		now := time.Now()
+		app.currentMonth = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		app.cursorDay = now.Day()
+	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
+		app.selectedDay = app.cursorDay
+		app.selectedDate = time.Date(year, month, app.selectedDay, 0, 0, 0, 0, app.currentMonth.Location())
+		app.fetchEntries(app.selectedDate)
+		app.fetchTimers()
+	}
+	return false
+}
+
+func (app *App) handleContentKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
+		return false
+	}
+	if key.Matches('K') {
+		app.focusedWindow = Calendar
+	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
+		if app.selectedEntry < len(app.entries)-1 {
+			app.selectedEntry++
+			visibleRows := app.contentRows - 3 // Account for header and footer
+			if app.selectedEntry >= app.contentCursor+visibleRows {
+				app.contentCursor = app.selectedEntry - visibleRows + 1
 			}
 		}
-	} else if app.focusedWindow == Timer && !app.showQuitConfirm {
-		if key.Matches('H') {
-			app.focusedWindow = Calendar
-		} else if key.Matches('J') {
-			app.focusedWindow = Content
-		} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
-			if len(app.timers) > 0 {
-				app.stopTimers()
-			} else {
-				app.startTimer()
+	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
+		if app.selectedEntry > 0 {
+			app.selectedEntry--
+			if app.selectedEntry < app.contentCursor {
+				app.contentCursor = app.selectedEntry
 			}
 		}
 	}
+	return false
+}
 
+func (app *App) handleTimerKeys(key vaxis.Key) bool {
+	if app.showQuitConfirm {
+		return false
+	}
+	if key.Matches('H') {
+		app.focusedWindow = Calendar
+	} else if key.Matches('J') {
+		app.focusedWindow = Content
+	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
+		if len(app.timers) > 0 {
+			app.stopTimers()
+		} else {
+			app.startTimer()
+		}
+	}
+	return false
+}
+
+func (app *App) handleUserKeys() bool {
 	return false
 }
