@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type TaskResponse struct {
@@ -37,4 +38,13 @@ func findTask(tasks map[string]TaskResponse, taskID int) *TaskResponse {
 		}
 	}
 	return nil
+}
+
+func (app *App) findTaskIndex(taskID string) int {
+	for i, id := range app.allTasksIDs {
+		if strconv.Itoa(id) == taskID {
+			return i
+		}
+	}
+	return 0
 }
