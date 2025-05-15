@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -52,6 +53,9 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 
 	_, rows := app.vx.Window().Size()
 
+	containsBillable := slices.ContainsFunc(app.entries, func(entry EntryResponse) bool {
+		return entry.Billable > 0
+	})
 	visibleEntries := calculateVisibleEntries(app.entries, scrollOffset, rows)
 	var totalDuration time.Duration
 	for i, entry := range visibleEntries {
@@ -81,7 +85,12 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 		}
 		name := entry.Name
 		if entry.Name != "" {
-			name = " [" + entry.Name + "]"
+			name = " [" + name + "]"
+		}
+		if entry.Billable > 0 {
+			name = " $" + name
+		} else if containsBillable {
+			name = "  " + name
 		}
 		win.Println(row,
 			vaxis.Segment{
