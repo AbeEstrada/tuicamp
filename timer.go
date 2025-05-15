@@ -136,6 +136,14 @@ func (app *App) drawTimerWindow(win vaxis.Window) {
 			Style: vaxis.Style{Attribute: vaxis.AttrBold},
 		})
 
+	if app.timers == nil {
+		win.Println(2, vaxis.Segment{
+			Text:  "Loading timer status...",
+			Style: vaxis.Style{Attribute: vaxis.AttrItalic},
+		})
+		return
+	}
+
 	buttonText := "Start timer ▶"
 	if len(app.timers) > 0 {
 		buttonText = "Stop timer ■"

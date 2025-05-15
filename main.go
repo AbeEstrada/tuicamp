@@ -21,6 +21,7 @@ type App struct {
 	focusedWindow     int
 	showQuitConfirm   bool
 	showDeleteConfirm bool
+	showEditEntry     bool
 
 	userRows int
 
@@ -46,6 +47,7 @@ type App struct {
 	me      MeResponse
 	timers  []TimersRunningResponse
 	entries []EntryResponse
+	tasks   map[string]TaskResponse
 }
 
 func main() {
@@ -70,14 +72,22 @@ func main() {
 		cursorDay:     now.Day(),
 		selectedDay:   now.Day(),
 		selectedDate:  now,
+		apiClient:     NewAPIClient("https://app.timecamp.com/third_party/api"),
 	}
 
-	app.apiClient = NewAPIClient("https://app.timecamp.com/third_party/api")
-	app.fetchMe()
-	app.fetchEntries(app.selectedDate)
-	app.fetchTimers()
-
 	app.UpdateDimensions()
+	app.Draw()
+	vx.Render()
+
+	go func() {
+		app.fetchMe()
+		app.fetchEntries(app.selectedDate)
+		app.fetchTimers()
+		app.vx.PostEvent(vaxis.Redraw{})
+
+		app.fetchTasks()
+		app.vx.PostEvent(vaxis.Redraw{})
+	}()
 
 	for ev := range vx.Events() {
 		if app.HandleEvent(ev) {
@@ -185,16 +195,15 @@ func (app *App) handleGlobalKeys(key vaxis.Key) bool {
 			app.showQuitConfirm = false
 		}
 		return false
-	} else {
-		if !app.showDeleteConfirm {
-			if key.Matches('q') {
-				app.showQuitConfirm = true
-				return false
-			}
-			if key.Matches(vaxis.KeyTab) {
-				app.focusedWindow = (app.focusedWindow % 3) + 1
-			}
+	} else if !app.showDeleteConfirm && !app.showEditEntry {
+		if key.Matches('q') {
+			app.showQuitConfirm = true
+			return false
 		}
+		if key.Matches(vaxis.KeyTab) {
+			app.focusedWindow = (app.focusedWindow % 3) + 1
+		}
+
 	}
 	if key.Matches('c', vaxis.ModCtrl) {
 		return true // Exit application

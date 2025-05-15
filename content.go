@@ -34,6 +34,18 @@ func (app *App) drawContentWindow(win vaxis.Window) {
 		app.drawConfirmationDialog(win, "Delete this entry? (y/n)", 1)
 		return
 	}
+	if app.showEditEntry {
+		app.drawEditEntryWindow(win)
+		return
+	}
+
+	if app.entries == nil {
+		win.Print(vaxis.Segment{
+			Text:  "Loading entries...",
+			Style: vaxis.Style{Attribute: vaxis.AttrItalic},
+		})
+		return
+	}
 
 	if app.selectedDay == 0 {
 		win.Print(vaxis.Segment{
@@ -154,6 +166,11 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 			app.showDeleteConfirm = false
 		}
 	}
+	if app.showEditEntry {
+		if key.Matches('q') || key.Matches(vaxis.KeyEsc) {
+			app.showEditEntry = false
+		}
+	}
 
 	if key.Matches('K') {
 		app.focusedWindow = Calendar
@@ -174,6 +191,8 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 		}
 	} else if key.Matches('d') {
 		app.showDeleteConfirm = true
+	} else if key.Matches('e') || key.Matches(vaxis.KeyEnter) {
+		app.showEditEntry = false
 	}
 	return false
 }

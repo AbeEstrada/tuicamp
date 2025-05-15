@@ -41,8 +41,17 @@ func (app *App) fetchMe() error {
 }
 
 func (app *App) drawUserWindow(win vaxis.Window) {
+	if app.me.UserID == "" && app.me.Email == "" {
+		win.Println(0, vaxis.Segment{
+			Text:  "Loading user info...",
+			Style: vaxis.Style{Attribute: vaxis.AttrItalic},
+		})
+		return
+	}
+
 	displayName := app.me.DisplayName
 	email := app.me.Email
+
 	if app.me.DisplayName != "" {
 		email = " (" + app.me.Email + ") "
 	}
