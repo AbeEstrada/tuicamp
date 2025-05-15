@@ -29,6 +29,11 @@ type EntryResponse struct {
 }
 
 func (app *App) drawContentWindow(win vaxis.Window) {
+	if app.showDeleteConfirm {
+		app.drawConfirmationDialog(win, "Delete this entry? (y/n)", 1)
+		return
+	}
+
 	if app.selectedDay == 0 {
 		win.Print(vaxis.Segment{
 			Text:  "No date selected",
@@ -131,6 +136,16 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 	if app.showQuitConfirm {
 		return false
 	}
+	if app.showDeleteConfirm {
+		if key.Matches('y') || key.Matches(vaxis.KeyEnter) {
+			app.showDeleteConfirm = false
+			app.deleteEntry(app.entries[app.selectedEntry].ID)
+			app.fetchEntries(app.selectedDate)
+		} else if key.Matches('n') || key.Matches(vaxis.KeyEsc) {
+			app.showDeleteConfirm = false
+		}
+	}
+
 	if key.Matches('K') {
 		app.focusedWindow = Calendar
 	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
@@ -148,6 +163,8 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 				app.contentCursor = app.selectedEntry
 			}
 		}
+	} else if key.Matches('d') {
+		app.showDeleteConfirm = true
 	}
 	return false
 }
@@ -170,6 +187,31 @@ func (app *App) fetchEntries(date time.Time) error {
 	app.entries = allEntries
 	app.selectedEntry = 0
 	app.contentCursor = 0
+	return nil
+}
+
+func (app *App) deleteEntry(ID int64) error {
+	type Body struct {
+		ID string `json:"id"`
+	}
+	type Response struct {
+		Message string `json:"message"`
+	}
+	body := Body{
+		ID: strconv.FormatInt(ID, 10),
+	}
+	var response Response
+	resultChan := app.apiClient.CallAsyncWithChannel(CallOptions{
+		Endpoint:    "/entries",
+		Method:      "DELETE",
+		RequestBody: &body,
+		Response:    &response,
+		Headers:     map[string]string{"Authorization": "Bearer " + app.apiToken},
+	})
+	result := <-resultChan
+	if result.Error != nil {
+		return fmt.Errorf("failed API response: %w", result.Error)
+	}
 	return nil
 }
 
