@@ -17,9 +17,10 @@ const ( // Windows
 )
 
 type App struct {
-	vx              *vaxis.Vaxis
-	focusedWindow   int
-	showQuitConfirm bool
+	vx                *vaxis.Vaxis
+	focusedWindow     int
+	showQuitConfirm   bool
+	showDeleteConfirm bool
 
 	userRows int
 
@@ -125,13 +126,13 @@ func (app *App) Draw() {
 	app.drawContentWindow(contentWin)
 
 	if app.showQuitConfirm {
-		drawQuitConfirmation(mainWin)
+		app.drawConfirmationDialog(mainWin, "Quit the application?", 4)
 	}
 
 	app.vx.Render()
 }
 
-func drawQuitConfirmation(win vaxis.Window) {
+func (app *App) drawConfirmationDialog(win vaxis.Window, message string, highlightColor uint8) {
 	width, height := win.Size()
 	dialogWidth := 40
 	dialogHeight := 3
@@ -139,19 +140,18 @@ func drawQuitConfirmation(win vaxis.Window) {
 	dialogY := (height - dialogHeight) / 2
 	dialogWin := win.New(dialogX, dialogY, dialogWidth, dialogHeight)
 	dialogWin = border.All(dialogWin, vaxis.Style{
-		Foreground: vaxis.IndexColor(4),
+		Foreground: vaxis.IndexColor(highlightColor),
 		Attribute:  vaxis.AttrBold,
 	})
 	dialogWin.Print(
 		vaxis.Segment{
-			Text: "Quit the application?",
+			Text: message,
 			Style: vaxis.Style{
 				Attribute: vaxis.AttrBold,
 			},
 		},
 	)
 }
-
 func (app *App) HandleEvent(ev vaxis.Event) bool {
 	switch ev := ev.(type) {
 	case vaxis.Key:
@@ -185,16 +185,19 @@ func (app *App) handleGlobalKeys(key vaxis.Key) bool {
 			app.showQuitConfirm = false
 		}
 		return false
-	}
-	if key.Matches('q') {
-		app.showQuitConfirm = true
-		return false
+	} else {
+		if !app.showDeleteConfirm {
+			if key.Matches('q') {
+				app.showQuitConfirm = true
+				return false
+			}
+			if key.Matches(vaxis.KeyTab) {
+				app.focusedWindow = (app.focusedWindow % 3) + 1
+			}
+		}
 	}
 	if key.Matches('c', vaxis.ModCtrl) {
 		return true // Exit application
-	}
-	if key.Matches(vaxis.KeyTab) {
-		app.focusedWindow = (app.focusedWindow % 3) + 1
 	}
 	return false
 }
