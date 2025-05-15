@@ -29,3 +29,12 @@ func (app *App) fetchTasks() error {
 	app.tasks = response
 	return nil
 }
+
+func findTask(tasks map[string]TaskResponse, taskID int) *TaskResponse {
+	for _, task := range tasks {
+		if task.TaskID == taskID {
+			return &task
+		}
+	}
+	return nil
+}

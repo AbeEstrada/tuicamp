@@ -167,9 +167,8 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 		}
 	}
 	if app.showEditEntry {
-		if key.Matches('q') || key.Matches(vaxis.KeyEsc) {
-			app.showEditEntry = false
-		}
+		app.handleEditEntryKeys(key)
+		return false
 	}
 
 	if key.Matches('K') {
@@ -192,7 +191,7 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 	} else if key.Matches('d') {
 		app.showDeleteConfirm = true
 	} else if key.Matches('e') || key.Matches(vaxis.KeyEnter) {
-		app.showEditEntry = false
+		app.showEditEntry = true
 	}
 	return false
 }

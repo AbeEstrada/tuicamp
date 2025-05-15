@@ -30,6 +30,10 @@ type App struct {
 	contentCursor int
 	selectedEntry int
 
+	selectedTask int
+	drawnTasks   int
+	allTasksIDs  []int
+
 	calendarCols int
 	calendarRows int
 	currentMonth time.Time
