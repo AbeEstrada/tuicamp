@@ -159,6 +159,10 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 		if app.selectedTask > 0 {
 			app.selectedTask--
 		}
+	} else if key.Matches('g') {
+		app.selectedTask = 0
+	} else if key.Matches('G') {
+		app.selectedTask = app.drawnTasks - 1
 	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
 		app.showEditEntry = false
 		go func() {
