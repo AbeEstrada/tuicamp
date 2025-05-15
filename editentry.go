@@ -78,7 +78,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 				style.Attribute |= vaxis.AttrReverse
 			}
 			win.Println(row, vaxis.Segment{
-				Text:  "• " + parentTask.Name + " " + parentTaskID,
+				Text:  "• " + parentTask.Name,
 				Style: style,
 			})
 			row++
@@ -104,7 +104,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 					style.Attribute = vaxis.AttrReverse
 				}
 				win.Println(row, vaxis.Segment{
-					Text:  "  └─ " + child.Name + " " + childID,
+					Text:  "  └─ " + child.Name,
 					Style: style,
 				})
 				row++
