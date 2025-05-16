@@ -90,7 +90,7 @@ func (app *App) stopTimers() error {
 			return fmt.Errorf("failed API response: %w", result.Error)
 		}
 		app.timerTicker.Stop()
-		app.timers = nil
+		app.timers = []TimersRunningResponse{}
 		app.fetchEntries(app.selectedDate)
 	}
 	return nil
