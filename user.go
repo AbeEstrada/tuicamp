@@ -23,20 +23,18 @@ type PermissionsResponse struct {
 }
 
 func (app *App) fetchMe() error {
-	if len(app.timers) == 0 {
-		var response MeResponse
-		resultChan := app.apiClient.CallAsyncWithChannel(CallOptions{
-			Endpoint: fmt.Sprintf("/me"),
-			Method:   "GET",
-			Response: &response,
-			Headers:  map[string]string{"Authorization": "Bearer " + app.apiToken},
-		})
-		result := <-resultChan
-		if result.Error != nil {
-			return fmt.Errorf("failed API response: %w", result.Error)
-		}
-		app.me = response
+	var response MeResponse
+	resultChan := app.apiClient.CallAsyncWithChannel(CallOptions{
+		Endpoint: fmt.Sprintf("/me"),
+		Method:   "GET",
+		Response: &response,
+		Headers:  map[string]string{"Authorization": "Bearer " + app.apiToken},
+	})
+	result := <-resultChan
+	if result.Error != nil {
+		return fmt.Errorf("failed API response: %w", result.Error)
 	}
+	app.me = response
 	return nil
 }
 
