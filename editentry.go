@@ -165,6 +165,16 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 		if key.Matches(vaxis.KeyEsc) || key.Matches(vaxis.KeyEnter) || key.Matches('/') {
 			app.taskSearchMode = false
 			app.taskSearchInput = ""
+		} else if key.Matches(vaxis.KeyBackspace) {
+			if len(app.taskSearchInput) > 0 {
+				app.taskSearchInput = app.taskSearchInput[:len(app.taskSearchInput)-1]
+				if len(app.taskSearchInput) > 0 {
+					taskIndex := app.findParentTaskByFirstLetter(app.taskSearchInput)
+					if taskIndex >= 0 {
+						app.selectedTask = taskIndex
+					}
+				}
+			}
 		} else if key.Text != "" {
 			app.taskSearchInput += string(key.Text)
 			taskIndex := app.findParentTaskByFirstLetter(app.taskSearchInput)
