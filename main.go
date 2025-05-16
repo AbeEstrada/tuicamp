@@ -34,6 +34,9 @@ type App struct {
 	drawnTasks   int
 	allTasksIDs  []int
 
+	taskSearchMode  bool
+	taskSearchInput string
+
 	calendarCols int
 	calendarRows int
 	currentMonth time.Time
@@ -69,14 +72,16 @@ func main() {
 
 	now := time.Now()
 	app := &App{
-		vx:            vx,
-		focusedWindow: Calendar,
-		apiToken:      apiToken,
-		currentMonth:  time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()),
-		cursorDay:     now.Day(),
-		selectedDay:   now.Day(),
-		selectedDate:  now,
-		apiClient:     NewAPIClient("https://app.timecamp.com/third_party/api"),
+		vx:              vx,
+		focusedWindow:   Calendar,
+		apiToken:        apiToken,
+		currentMonth:    time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()),
+		cursorDay:       now.Day(),
+		selectedDay:     now.Day(),
+		selectedDate:    now,
+		apiClient:       NewAPIClient("https://app.timecamp.com/third_party/api"),
+		taskSearchMode:  false,
+		taskSearchInput: "",
 	}
 
 	app.UpdateDimensions()
@@ -166,6 +171,7 @@ func (app *App) drawConfirmationDialog(win vaxis.Window, message string, highlig
 		},
 	)
 }
+
 func (app *App) HandleEvent(ev vaxis.Event) bool {
 	switch ev := ev.(type) {
 	case vaxis.Key:

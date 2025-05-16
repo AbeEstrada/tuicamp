@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 )
 
 type TaskResponse struct {
@@ -47,4 +49,30 @@ func (app *App) findTaskIndex(taskID string) int {
 		}
 	}
 	return 0
+}
+
+func (app *App) findParentTaskByFirstLetter(letter string) int {
+	letter = strings.ToLower(letter)
+	var parentIDs []int
+	for _, task := range app.tasks {
+		if task.ParentID == 0 {
+			parentIDs = append(parentIDs, task.TaskID)
+		}
+	}
+	sort.Slice(parentIDs, func(i, j int) bool {
+		taskI := findTask(app.tasks, parentIDs[i])
+		taskJ := findTask(app.tasks, parentIDs[j])
+		return strings.ToLower(taskI.Name) < strings.ToLower(taskJ.Name)
+	})
+	for _, parentID := range parentIDs {
+		task := findTask(app.tasks, parentID)
+		if task != nil && strings.HasPrefix(strings.ToLower(task.Name), letter) {
+			for i, id := range app.allTasksIDs {
+				if id == task.TaskID {
+					return i
+				}
+			}
+		}
+	}
+	return -1 // Not found
 }

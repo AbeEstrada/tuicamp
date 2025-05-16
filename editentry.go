@@ -32,6 +32,13 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 		}
 	}
 
+	if app.taskSearchMode {
+		win.Println(4, vaxis.Segment{
+			Text:  "Search: " + app.taskSearchInput,
+			Style: vaxis.Style{Foreground: vaxis.IndexColor(3)},
+		})
+	}
+
 	parentTasks := make(map[int][]TaskResponse)
 	var parentIDs []int
 	var allTasks []TaskResponse
@@ -49,7 +56,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 	})
 
 	_, rows := win.Size()
-	visibleRows := rows - 5
+	visibleRows := rows - 6
 	if visibleRows < 1 {
 		visibleRows = 1
 	}
@@ -61,7 +68,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 		scrollOffset = max(0, len(allTasks)-visibleRows)
 	}
 
-	row := 4
+	row := 5
 	drawnTasks := 0
 	var allTasksIDs []int
 
@@ -154,11 +161,28 @@ func (app *App) updateEntryTaskID(entryID int64, taskID int) error {
 }
 
 func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
+	if app.taskSearchMode {
+		if key.Matches(vaxis.KeyEsc) || key.Matches(vaxis.KeyEnter) || key.Matches('/') {
+			app.taskSearchMode = false
+			app.taskSearchInput = ""
+		} else if key.Text != "" {
+			app.taskSearchInput += string(key.Text)
+			taskIndex := app.findParentTaskByFirstLetter(app.taskSearchInput)
+			if taskIndex >= 0 {
+				app.selectedTask = taskIndex
+			}
+		}
+		return false
+	}
+
 	if key.Matches('q') || key.Matches(vaxis.KeyEsc) {
 		app.showEditEntry = false
 		return false
-	}
-	if key.Matches('j') || key.Matches(vaxis.KeyDown) {
+	} else if key.Matches('/') {
+		app.taskSearchMode = true
+		app.taskSearchInput = ""
+		return false
+	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
 		if app.selectedTask < app.drawnTasks-1 {
 			app.selectedTask++
 		}
