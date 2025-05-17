@@ -25,11 +25,9 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 		Text: currentEntryName,
 	})
 
-	if app.selectedEntry < len(app.entries) {
-		if currentEntry.TaskID != "" && app.selectedTask == 0 {
-			app.selectedTask = app.findTaskIndex(currentEntry.TaskID)
-			app.vx.PostEvent(vaxis.Redraw{})
-		}
+	if currentEntry.TaskID != "" && app.selectedTask == -1 {
+		app.selectedTask = app.findTaskIndex(currentEntry.TaskID)
+		app.vx.PostEvent(vaxis.Redraw{})
 	}
 
 	if app.taskSearchMode {

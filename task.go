@@ -48,7 +48,7 @@ func (app *App) findTaskIndex(taskID string) int {
 			return i
 		}
 	}
-	return 0
+	return -1
 }
 
 func (app *App) findParentTaskByFirstLetter(letter string) int {

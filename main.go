@@ -82,6 +82,7 @@ func main() {
 		apiClient:       NewAPIClient("https://app.timecamp.com/third_party/api"),
 		taskSearchMode:  false,
 		taskSearchInput: "",
+		selectedTask:    -1,
 	}
 
 	app.UpdateDimensions()
