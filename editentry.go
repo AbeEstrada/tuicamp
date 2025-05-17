@@ -105,7 +105,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 			return strings.ToLower(children[i].Name) < strings.ToLower(children[j].Name)
 		})
 
-		for _, child := range children {
+		for childIndex, child := range children {
 			if drawnTasks >= scrollOffset && drawnTasks < scrollOffset+visibleRows {
 				childID := strconv.Itoa(child.TaskID)
 				isCurrent := childID == currentEntry.TaskID
@@ -117,15 +117,20 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 				if isSelected {
 					style.Attribute = vaxis.AttrReverse
 				}
+				branch := "└─"
+				if childIndex == 0 && len(children) > 1 {
+					branch = "├─"
+				} else if childIndex < len(children)-1 {
+					branch = "├─"
+				}
 				win.Println(row, vaxis.Segment{
-					Text:  "  └─ " + child.Name,
+					Text:  "  " + branch + " " + child.Name,
 					Style: style,
 				})
 				row++
 			}
 			drawnTasks++
 			allTasksIDs = append(allTasksIDs, child.TaskID)
-
 		}
 	}
 	app.drawnTasks = drawnTasks
