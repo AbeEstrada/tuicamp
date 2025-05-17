@@ -118,9 +118,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 					style.Attribute = vaxis.AttrReverse
 				}
 				branch := "└─"
-				if childIndex == 0 && len(children) > 1 {
-					branch = "├─"
-				} else if childIndex < len(children)-1 {
+				if childIndex < len(children)-1 {
 					branch = "├─"
 				}
 				win.Println(row, vaxis.Segment{
