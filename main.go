@@ -31,10 +31,10 @@ type App struct {
 	contentCursor int
 	selectedEntry int
 
-	selectedTask int
-	drawnTasks   int
-	allTasksIDs  []int
-
+	selectedTask    int
+	drawnTasks      int
+	allTasksIDs     []int
+	taskHierarchy   *TaskHierarchy
 	taskSearchMode  bool
 	taskSearchInput string
 

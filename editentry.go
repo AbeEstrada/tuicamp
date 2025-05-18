@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
-	"strings"
 
 	"git.sr.ht/~rockorager/vaxis"
 )
@@ -37,21 +35,10 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 		})
 	}
 
-	parentTasks := make(map[int][]TaskResponse)
-	var parentIDs []int
-	var allTasks []TaskResponse
-	for _, task := range app.tasks {
-		parentTasks[task.ParentID] = append(parentTasks[task.ParentID], task)
-		if task.ParentID == 0 {
-			parentIDs = append(parentIDs, task.TaskID)
-		}
-		allTasks = append(allTasks, task)
+	if app.taskHierarchy == nil {
+		app.taskHierarchy = app.buildTaskHierarchy()
+		app.allTasksIDs = app.taskHierarchy.AllTasksIDs
 	}
-	sort.Slice(parentIDs, func(i, j int) bool {
-		taskI := findTask(app.tasks, parentIDs[i])
-		taskJ := findTask(app.tasks, parentIDs[j])
-		return strings.ToLower(taskI.Name) < strings.ToLower(taskJ.Name)
-	})
 
 	_, rows := win.Size()
 	visibleRows := rows - 6
@@ -62,15 +49,14 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 	if scrollOffset < 0 {
 		scrollOffset = 0
 	}
-	if scrollOffset > len(allTasks)-visibleRows {
-		scrollOffset = max(0, len(allTasks)-visibleRows)
+	if scrollOffset > len(app.taskHierarchy.AllTasksIDs)-visibleRows {
+		scrollOffset = max(0, len(app.taskHierarchy.AllTasksIDs)-visibleRows)
 	}
 
 	row := 5
 	drawnTasks := 0
-	var allTasksIDs []int
 
-	for _, parentID := range parentIDs {
+	for _, parentID := range app.taskHierarchy.ParentIDs {
 		if parentID == 0 {
 			continue
 		}
@@ -96,13 +82,8 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 			row++
 		}
 		drawnTasks++
-		allTasksIDs = append(allTasksIDs, parentTask.TaskID)
 
-		children := parentTasks[parentID]
-		sort.Slice(children, func(i, j int) bool {
-			return strings.ToLower(children[i].Name) < strings.ToLower(children[j].Name)
-		})
-
+		children := app.taskHierarchy.ParentTasks[parentID]
 		for childIndex, child := range children {
 			if drawnTasks >= scrollOffset && drawnTasks < scrollOffset+visibleRows {
 				childID := strconv.Itoa(child.TaskID)
@@ -126,11 +107,9 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 				row++
 			}
 			drawnTasks++
-			allTasksIDs = append(allTasksIDs, child.TaskID)
 		}
 	}
 	app.drawnTasks = drawnTasks
-	app.allTasksIDs = allTasksIDs
 }
 
 func (app *App) updateEntryTaskID(entryID int64, taskID int) error {
