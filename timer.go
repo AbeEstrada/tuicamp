@@ -89,32 +89,40 @@ func (app *App) stopTimers() error {
 		if result.Error != nil {
 			return fmt.Errorf("failed API response: %w", result.Error)
 		}
-		app.timerTicker.Stop()
+		app.stopTimerTicker()
 		app.timers = []TimersRunningResponse{}
 		app.fetchEntries(app.selectedDate)
 	}
 	return nil
 }
 
-func (app *App) updateTimer() {
+func (app *App) stopTimerTicker() {
 	if app.timerTicker != nil {
 		app.timerTicker.Stop()
 		app.timerTicker = nil
 	}
+	if app.timerDone != nil {
+		close(app.timerDone)
+		app.timerDone = nil
+	}
+}
+
+func (app *App) updateTimer() {
+	app.stopTimerTicker()
+
 	if len(app.timers) > 0 {
 		startTime, err := time.ParseInLocation("2006-01-02 15:04:05", app.timers[0].StartedAt, app.currentMonth.Location())
 		if err == nil {
 			app.elapsedTime = time.Since(startTime)
 			app.timerTicker = time.NewTicker(1 * time.Second)
-			done := make(chan struct{})
-			app.timerDone = done
+			app.timerDone = make(chan struct{})
 			go func() {
 				for {
 					select {
 					case <-app.timerTicker.C:
 						app.elapsedTime = time.Since(startTime)
 						app.vx.PostEvent(vaxis.Redraw{})
-					case <-done:
+					case <-app.timerDone:
 						return
 					}
 				}
@@ -122,10 +130,6 @@ func (app *App) updateTimer() {
 		}
 	} else {
 		app.elapsedTime = 0
-		if app.timerDone != nil {
-			close(app.timerDone)
-			app.timerDone = nil
-		}
 	}
 }
 
