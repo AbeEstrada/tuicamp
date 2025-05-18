@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"git.sr.ht/~rockorager/vaxis"
@@ -89,15 +90,7 @@ func main() {
 	app.Draw()
 	vx.Render()
 
-	go func() {
-		app.fetchMe()
-		app.fetchEntries(app.selectedDate)
-		app.fetchTimers()
-		app.vx.PostEvent(vaxis.Redraw{})
-
-		app.fetchTasks()
-		app.vx.PostEvent(vaxis.Redraw{})
-	}()
+	go app.fetchInitialData()
 
 	for ev := range vx.Events() {
 		if app.HandleEvent(ev) {
@@ -105,6 +98,54 @@ func main() {
 		}
 		app.Draw()
 	}
+}
+
+type fetchError struct {
+	fetchType string
+	err       error
+}
+
+func (app *App) fetchInitialData() {
+	var wg sync.WaitGroup
+	errChan := make(chan fetchError, 4)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := app.fetchMe(); err != nil {
+			errChan <- fetchError{"user info", err}
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := app.fetchEntries(app.selectedDate); err != nil {
+			errChan <- fetchError{"entries", err}
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := app.fetchTimers(); err != nil {
+			errChan <- fetchError{"timers", err}
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := app.fetchTasks(); err != nil {
+			errChan <- fetchError{"tasks", err}
+		}
+	}()
+	go func() {
+		wg.Wait()
+		close(errChan)
+		app.vx.PostEvent(vaxis.Redraw{})
+	}()
+	go func() {
+		for fetchErr := range errChan {
+			fmt.Fprintf(os.Stderr, "error fetching %s: %v\n", fetchErr.fetchType, fetchErr.err)
+		}
+	}()
 }
 
 func (app *App) UpdateDimensions() {
