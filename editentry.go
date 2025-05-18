@@ -37,7 +37,6 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 
 	if app.taskHierarchy == nil {
 		app.taskHierarchy = app.buildTaskHierarchy()
-		app.allTasksIDs = app.taskHierarchy.AllTasksIDs
 	}
 
 	_, rows := win.Size()
@@ -187,7 +186,7 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
 		app.showEditEntry = false
 		go func() {
-			app.updateEntryTaskID(app.entries[app.selectedEntry].ID, app.allTasksIDs[app.selectedTask])
+			app.updateEntryTaskID(app.entries[app.selectedEntry].ID, app.taskHierarchy.AllTasksIDs[app.selectedTask])
 			app.fetchEntries(app.selectedDate)
 			app.vx.PostEvent(vaxis.Redraw{})
 		}()

@@ -52,9 +52,8 @@ func findTask(tasks map[string]TaskResponse, taskID int) *TaskResponse {
 func (app *App) findTaskIndex(taskID string) int {
 	if app.taskHierarchy == nil {
 		app.taskHierarchy = app.buildTaskHierarchy()
-		app.allTasksIDs = app.taskHierarchy.AllTasksIDs
 	}
-	for i, id := range app.allTasksIDs {
+	for i, id := range app.taskHierarchy.AllTasksIDs {
 		if strconv.Itoa(id) == taskID {
 			return i
 		}
@@ -65,13 +64,12 @@ func (app *App) findTaskIndex(taskID string) int {
 func (app *App) findParentTaskByFirstLetter(letter string) int {
 	if app.taskHierarchy == nil {
 		app.taskHierarchy = app.buildTaskHierarchy()
-		app.allTasksIDs = app.taskHierarchy.AllTasksIDs
 	}
 	letter = strings.ToLower(letter)
 	for _, parentID := range app.taskHierarchy.ParentIDs {
 		task := findTask(app.tasks, parentID)
 		if task != nil && strings.HasPrefix(strings.ToLower(task.Name), letter) {
-			for i, id := range app.allTasksIDs {
+			for i, id := range app.taskHierarchy.AllTasksIDs {
 				if id == task.TaskID {
 					return i
 				}

@@ -33,7 +33,6 @@ type App struct {
 
 	selectedTask    int
 	drawnTasks      int
-	allTasksIDs     []int
 	taskHierarchy   *TaskHierarchy
 	taskSearchMode  bool
 	taskSearchInput string
