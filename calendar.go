@@ -149,6 +149,7 @@ func (app *App) handleCalendarKeys(key vaxis.Key) bool {
 		app.currentMonth = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 		app.cursorDay = now.Day()
 	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
+		app.selectedTask = -1
 		app.selectedDay = app.cursorDay
 		app.selectedDate = time.Date(year, month, app.selectedDay, 0, 0, 0, 0, app.currentMonth.Location())
 		app.fetchEntries(app.selectedDate)
