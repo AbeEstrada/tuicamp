@@ -183,7 +183,7 @@ func (app *App) Draw() {
 	app.drawTimerWindow(timerWin)
 
 	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+app.userRows, cols, app.contentRows, app.focusedWindow == Content)
-	app.drawContentWindow(contentWin)
+	app.drawEntriesWindow(contentWin)
 
 	if app.showQuitConfirm {
 		app.drawConfirmationDialog(mainWin, "Quit the application?", 4)

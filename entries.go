@@ -29,7 +29,7 @@ type EntryResponse struct {
 	Description      string `json:"description"`
 }
 
-func (app *App) drawContentWindow(win vaxis.Window) {
+func (app *App) drawEntriesWindow(win vaxis.Window) {
 	if app.showDeleteConfirm {
 		app.drawConfirmationDialog(win, "Delete this entry? (y/n)", 1)
 		return
