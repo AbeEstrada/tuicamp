@@ -1,4 +1,4 @@
-![Icon](https://github.com/user-attachments/assets/cbf3c65e-1a6e-44ee-ad5d-5b27b06c93cb)
+![Icon](https://github.com/user-attachments/assets/27cad258-8627-4163-b4b6-73ac27accc4f)
 
 # TuiCamp
 
