@@ -1,3 +1,5 @@
+![Icon](https://github.com/user-attachments/assets/7528fcda-c77f-4f3f-a9a6-fae0109f9e0a)
+
 # TuiCamp
 
 Unofficial TimeCamp TUI
