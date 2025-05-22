@@ -61,7 +61,7 @@ func (app *App) findTaskIndex(taskID string) int {
 	return -1
 }
 
-func (app *App) findParentTaskByFirstLetter(letter string) int {
+func (app *App) findParentTask(letter string) int {
 	if app.taskHierarchy == nil {
 		app.taskHierarchy = app.buildTaskHierarchy()
 	}
