@@ -65,7 +65,7 @@ func (app *App) drawCalendarWindow(win vaxis.Window) {
 					now.Month() == month &&
 					now.Day() == dayNum
 				style := vaxis.Style{}
-				if isCursor && app.focusedWindow == Calendar {
+				if isCursor && app.focusedWindow == WinCalendar {
 					style.Attribute = vaxis.AttrReverse
 				} else if isSelected {
 					style.Attribute = vaxis.AttrBold
@@ -104,9 +104,9 @@ func (app *App) handleCalendarKeys(key vaxis.Key) bool {
 	daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, app.currentMonth.Location()).Day()
 
 	if key.Matches('L') {
-		app.focusedWindow = Timer
+		app.focusedWindow = WinTimer
 	} else if key.Matches('J') {
-		app.focusedWindow = Content
+		app.focusedWindow = WinEntries
 	} else if key.Matches('h') || key.Matches(vaxis.KeyLeft) {
 		if app.cursorDay > 1 {
 			app.cursorDay--

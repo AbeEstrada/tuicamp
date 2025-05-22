@@ -160,7 +160,7 @@ func (app *App) drawTimerWindow(win vaxis.Window) {
 	}
 
 	currentStyle := buttonStyle
-	if app.focusedWindow == Timer {
+	if app.focusedWindow == WinTimer {
 		currentStyle = focusedStyle
 	}
 
@@ -184,9 +184,9 @@ func (app *App) handleTimerKeys(key vaxis.Key) bool {
 		return false
 	}
 	if key.Matches('H') {
-		app.focusedWindow = Calendar
+		app.focusedWindow = WinCalendar
 	} else if key.Matches('J') {
-		app.focusedWindow = Content
+		app.focusedWindow = WinEntries
 	} else if key.Matches(vaxis.KeyEnter) || key.Matches(vaxis.KeySpace) {
 		if len(app.timers) > 0 {
 			app.stopTimers()

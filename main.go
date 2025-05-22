@@ -11,10 +11,10 @@ import (
 )
 
 const ( // Windows
-	User     = 0 // Top
-	Calendar = 1 // Middle Left
-	Timer    = 2 // Middle Right
-	Content  = 3 // Bottom
+	WinUser     = 0 // Top
+	WinCalendar = 1 // Middle Left
+	WinTimer    = 2 // Middle Right
+	WinEntries  = 3 // Bottom
 )
 
 type App struct {
@@ -73,7 +73,7 @@ func main() {
 	now := time.Now()
 	app := &App{
 		vx:              vx,
-		focusedWindow:   Calendar,
+		focusedWindow:   WinCalendar,
 		apiToken:        apiToken,
 		currentMonth:    time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()),
 		cursorDay:       now.Day(),
@@ -173,16 +173,16 @@ func (app *App) Draw() {
 
 	cols, _ := app.vx.Window().Size()
 
-	userWin := app.createStyledWindow(mainWin, 0, 0, cols, app.userRows, app.focusedWindow == User)
+	userWin := app.createStyledWindow(mainWin, 0, 0, cols, app.userRows, app.focusedWindow == WinUser)
 	app.drawUserWindow(userWin)
 
-	calendarWin := app.createStyledWindow(mainWin, 0, app.userRows, app.calendarCols, app.calendarRows, app.focusedWindow == Calendar)
+	calendarWin := app.createStyledWindow(mainWin, 0, app.userRows, app.calendarCols, app.calendarRows, app.focusedWindow == WinCalendar)
 	app.drawCalendarWindow(calendarWin)
 
-	timerWin := app.createStyledWindow(mainWin, app.calendarCols, app.userRows, cols-app.calendarCols, app.calendarRows, app.focusedWindow == Timer)
+	timerWin := app.createStyledWindow(mainWin, app.calendarCols, app.userRows, cols-app.calendarCols, app.calendarRows, app.focusedWindow == WinTimer)
 	app.drawTimerWindow(timerWin)
 
-	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+app.userRows, cols, app.contentRows, app.focusedWindow == Content)
+	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+app.userRows, cols, app.contentRows, app.focusedWindow == WinEntries)
 	app.drawEntriesWindow(contentWin)
 
 	if app.showQuitConfirm {
@@ -228,11 +228,11 @@ func (app *App) HandleKeyEvent(key vaxis.Key) bool {
 		return true
 	}
 	switch app.focusedWindow {
-	case Calendar:
+	case WinCalendar:
 		return app.handleCalendarKeys(key)
-	case Content:
+	case WinEntries:
 		return app.handleContentKeys(key)
-	case Timer:
+	case WinTimer:
 		return app.handleTimerKeys(key)
 	}
 	return false

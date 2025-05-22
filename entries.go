@@ -86,7 +86,7 @@ func (app *App) drawEntriesWindow(win vaxis.Window) {
 			duration = elapsedTime.String()
 		}
 		selectedStyle := vaxis.Style{}
-		if i+app.contentCursor == app.selectedEntry && app.focusedWindow == Content {
+		if i+app.contentCursor == app.selectedEntry && app.focusedWindow == WinEntries {
 			selectedStyle = vaxis.Style{
 				Attribute: vaxis.AttrReverse,
 			}
@@ -172,7 +172,7 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 	}
 
 	if key.Matches('K') {
-		app.focusedWindow = Calendar
+		app.focusedWindow = WinCalendar
 	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
 		if app.selectedEntry < len(app.entries)-1 {
 			app.selectedEntry++
