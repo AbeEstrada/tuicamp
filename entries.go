@@ -162,6 +162,7 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 			app.showDeleteConfirm = false
 			app.deleteEntry(app.entries[app.selectedEntry].ID)
 			app.fetchEntries(app.selectedDate)
+			return false
 		} else if key.Matches('n') || key.Matches(vaxis.KeyEsc) {
 			app.showDeleteConfirm = false
 		}
