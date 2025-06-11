@@ -4,6 +4,23 @@
 
 Unofficial TimeCamp TUI
 
+## Build and Installation
+
+This project uses [`just`](https://github.com/casey/just) as a command runner and requires [Go](https://golang.org/) for building. Below are the available commands:
+
+### Available Commands
+
+- `just` or `just install` - Build and install the binary to `PREFIX/bin/` (default: `/usr/local/bin`)
+- `just build` - Build the binary in the current directory
+- `just uninstall` - Remove the installed binary
+- `just clean` - Remove the built binary from the current directory
+
+## Usage
+
+```sh
+tuicamp
+```
+
 ## Keybindings
 
 | Panel        |          Key           | Action                         |
