@@ -86,7 +86,7 @@ func (app *App) drawEntriesWindow(win vaxis.Window) {
 			duration = elapsedTime.String()
 		}
 		selectedStyle := vaxis.Style{}
-		if i+app.contentCursor == app.selectedEntry && app.focusedWindow == WinEntries {
+		if i+app.entriesCursor == app.selectedEntry && app.focusedWindow == WinEntries {
 			selectedStyle = vaxis.Style{
 				Attribute: vaxis.AttrReverse,
 			}
@@ -177,22 +177,24 @@ func (app *App) handleContentKeys(key vaxis.Key) bool {
 	} else if key.Matches('j') || key.Matches(vaxis.KeyDown) {
 		if app.selectedEntry < len(app.entries)-1 {
 			app.selectedEntry++
-			visibleRows := app.contentRows - 3 // Account for header and footer
-			if app.selectedEntry >= app.contentCursor+visibleRows {
-				app.contentCursor = app.selectedEntry - visibleRows + 1
+			visibleRows := app.entriesRows - 3 // Account for header and footer
+			if app.selectedEntry >= app.entriesCursor+visibleRows {
+				app.entriesCursor = app.selectedEntry - visibleRows + 1
 			}
 		}
 	} else if key.Matches('k') || key.Matches(vaxis.KeyUp) {
 		if app.selectedEntry > 0 {
 			app.selectedEntry--
-			if app.selectedEntry < app.contentCursor {
-				app.contentCursor = app.selectedEntry
+			if app.selectedEntry < app.entriesCursor {
+				app.entriesCursor = app.selectedEntry
 			}
 		}
 	} else if key.Matches('d') {
 		app.showDeleteConfirm = true
 	} else if key.Matches('e') || key.Matches(vaxis.KeyEnter) {
 		app.showEditEntry = true
+		app.entryEditCursor = 0
+		app.entryTimeInitialized = false
 	}
 	return false
 }
@@ -214,7 +216,7 @@ func (app *App) fetchEntries(date time.Time) error {
 	}
 	app.entries = allEntries
 	app.selectedEntry = 0
-	app.contentCursor = 0
+	app.entriesCursor = 0
 	return nil
 }
 

@@ -11,10 +11,10 @@ import (
 )
 
 const ( // Windows
-	WinUser     = 0 // Top
-	WinCalendar = 1 // Middle Left
-	WinTimer    = 2 // Middle Right
-	WinEntries  = 3 // Bottom
+	WinUser     = iota // Top
+	WinCalendar        // Middle Left
+	WinTimer           // Middle Right
+	WinEntries         // Bottom
 )
 
 type App struct {
@@ -26,9 +26,9 @@ type App struct {
 
 	userRows int
 
-	contentCols   int
-	contentRows   int
-	contentCursor int
+	entriesCols   int
+	entriesRows   int
+	entriesCursor int
 	selectedEntry int
 
 	selectedTask    int
@@ -36,6 +36,11 @@ type App struct {
 	taskHierarchy   *TaskHierarchy
 	taskSearchMode  bool
 	taskSearchInput string
+
+	entryEditCursor      int
+	entryStartTime       string
+	entryEndTime         string
+	entryTimeInitialized bool
 
 	calendarCols int
 	calendarRows int
@@ -152,7 +157,7 @@ func (app *App) UpdateDimensions() {
 	app.userRows = 3
 	app.calendarCols = 22
 	app.calendarRows = 10
-	app.contentRows = rows - app.calendarRows
+	app.entriesRows = rows - app.calendarRows
 }
 
 func (app *App) createStyledWindow(parent vaxis.Window, x, y, width, height int, isFocused bool) vaxis.Window {
@@ -182,7 +187,7 @@ func (app *App) Draw() {
 	timerWin := app.createStyledWindow(mainWin, app.calendarCols, app.userRows, cols-app.calendarCols, app.calendarRows, app.focusedWindow == WinTimer)
 	app.drawTimerWindow(timerWin)
 
-	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+app.userRows, cols, app.contentRows, app.focusedWindow == WinEntries)
+	contentWin := app.createStyledWindow(mainWin, 0, app.calendarRows+app.userRows, cols, app.entriesRows, app.focusedWindow == WinEntries)
 	app.drawEntriesWindow(contentWin)
 
 	if app.showQuitConfirm {
