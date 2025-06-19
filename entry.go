@@ -14,9 +14,14 @@ const (
 	EntryCursorTask
 )
 
+func (app *App) isEntryTimer(entry EntryResponse) bool {
+	return entry.StartTime == entry.EndTime && len(app.timers) > 0
+}
+
 func (app *App) drawEditEntryWindow(win vaxis.Window) {
 	dateStr := app.selectedDate.Format("Monday, January 2, 2006")
 	currentEntry := app.entries[app.selectedEntry]
+	isTimer := app.isEntryTimer(currentEntry)
 
 	if app.entryStartTime == "" && currentEntry.StartTime != "" && !app.entryTimeInitialized {
 		app.entryStartTime = currentEntry.StartTime
@@ -53,7 +58,7 @@ func (app *App) drawEditEntryWindow(win vaxis.Window) {
 		endTimeStyle.Foreground = vaxis.IndexColor(1) // Red for invalid
 	}
 	currentEntryEndTime := app.entryEndTime
-	if currentEntry.StartTime == currentEntry.EndTime && len(app.timers) > 0 {
+	if isTimer {
 		currentEntryEndTime = "⏱ "
 	}
 	win.Println(2, vaxis.Segment{
@@ -186,23 +191,27 @@ func (app *App) updateEntry(entryID int64, taskID *int, startTime, endTime strin
 	if taskID != nil {
 		body.TaskID = taskID
 	}
-	if startTime != "" {
-		body.StartTime = startTime
-	}
-	if endTime != "" {
-		body.EndTime = endTime
-	}
-	if startTime != "" && endTime != "" {
-		start, err1 := time.Parse("15:04:05", startTime)
-		end, err2 := time.Parse("15:04:05", endTime)
-		if err1 == nil && err2 == nil {
-			duration := end.Sub(start)
-			body.Duration = int(duration.Seconds())
+	currentEntry := app.entries[app.selectedEntry]
+	isTimer := app.isEntryTimer(currentEntry)
+	if !isTimer {
+		if startTime != "" {
+			body.StartTime = startTime
+		}
+		if endTime != "" {
+			body.EndTime = endTime
+		}
+		if startTime != "" && endTime != "" {
+			start, err1 := time.Parse("15:04:05", startTime)
+			end, err2 := time.Parse("15:04:05", endTime)
+			if err1 == nil && err2 == nil {
+				duration := end.Sub(start)
+				body.Duration = int(duration.Seconds())
+			}
 		}
 	}
 	var response Response
 	resultChan := app.apiClient.CallAsyncWithChannel(CallOptions{
-		Endpoint:    fmt.Sprintf("/entries"),
+		Endpoint:    "/entries",
 		Method:      "PUT",
 		RequestBody: &body,
 		Response:    &response,
@@ -227,6 +236,9 @@ func (app *App) validateTimes() bool {
 }
 
 func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
+	currentEntry := app.entries[app.selectedEntry]
+	isTimer := app.isEntryTimer(currentEntry)
+
 	if app.taskSearchMode {
 		if key.Matches(vaxis.KeyEsc) || key.Matches(vaxis.KeyEnter) || key.Matches('/') {
 			app.taskSearchMode = false
@@ -299,7 +311,7 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 		} else if key.Matches(vaxis.KeyDown) {
 			app.entryEditCursor += 1
 		} else if key.Matches(vaxis.KeyBackspace) {
-			if len(currentTime) > 0 {
+			if len(currentTime) > 0 && !isTimer {
 				if app.entryEditCursor == EntryCursorStart {
 					app.entryStartTime = currentTime[:len(currentTime)-1]
 				} else {

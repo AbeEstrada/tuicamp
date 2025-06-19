@@ -72,6 +72,7 @@ func (app *App) drawEntriesWindow(win vaxis.Window) {
 	var totalDuration time.Duration
 	for i, entry := range visibleEntries {
 		row := i + 2 // +1 to account for title row
+		isTimer := app.isEntryTimer(entry)
 		hexValue, _ := strconv.ParseUint(entry.Color[1:], 16, 32)
 		seconds, _ := strconv.ParseInt(entry.Duration, 10, 64)
 		duration := "0s"
@@ -92,8 +93,8 @@ func (app *App) drawEntriesWindow(win vaxis.Window) {
 			}
 		}
 		endTime := " - " + entry.EndTime
-		if entry.StartTime == entry.EndTime {
-			endTime = ""
+		if isTimer {
+			endTime = " - ⏱       "
 		}
 		name := entry.Name
 		if entry.Name != "" {
