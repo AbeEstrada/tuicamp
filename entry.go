@@ -312,6 +312,10 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 			app.taskSearchInput = ""
 		} else if key.Matches(vaxis.KeyDown) {
 			app.entryEditCursor += 1
+		} else if key.Matches(vaxis.KeyUp) {
+			if app.entryEditCursor == EntryCursorEnd {
+				app.entryEditCursor -= 1
+			}
 		} else if key.Matches(vaxis.KeyBackspace) {
 			if len(currentTime) > 0 && !isTimer {
 				if app.entryEditCursor == EntryCursorStart {
