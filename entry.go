@@ -268,6 +268,7 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 		app.entryStartTime = ""
 		app.entryEndTime = ""
 		app.entryTimeInitialized = false
+		app.selectedTask = -1
 		return false
 	} else if key.Matches(vaxis.KeyTab) {
 		app.entryEditCursor = (app.entryEditCursor + 1) % 3
@@ -294,6 +295,7 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 				app.entryStartTime,
 				app.entryEndTime,
 			)
+			app.selectedTask = -1
 			app.fetchEntries(app.selectedDate)
 			app.vx.PostEvent(vaxis.Redraw{})
 		}()
