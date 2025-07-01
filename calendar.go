@@ -64,9 +64,17 @@ func (app *App) drawCalendarWindow(win vaxis.Window) {
 				isToday := now.Year() == year &&
 					now.Month() == month &&
 					now.Day() == dayNum
+				currentDate := time.Date(year, month, dayNum, 0, 0, 0, 0, app.currentMonth.Location())
+				isWeekend := currentDate.Weekday() == time.Saturday || currentDate.Weekday() == time.Sunday
 				style := vaxis.Style{}
+				if isWeekend {
+					style.Foreground = vaxis.IndexColor(250)
+				}
 				if isCursor && app.focusedWindow == WinCalendar {
 					style.Attribute = vaxis.AttrReverse
+					if isToday {
+						style.Foreground = vaxis.IndexColor(4) // Blue for selected day
+					}
 				} else if isSelected {
 					style.Attribute = vaxis.AttrBold
 					style.Foreground = vaxis.IndexColor(4) // Blue for selected day
