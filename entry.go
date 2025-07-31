@@ -296,6 +296,8 @@ func (app *App) handleEditEntryKeys(key vaxis.Key) bool {
 				app.entryEndTime,
 			)
 			app.selectedTask = -1
+			app.entryStartTime = ""
+			app.entryEndTime = ""
 			app.fetchEntries(app.selectedDate)
 			app.vx.PostEvent(vaxis.Redraw{})
 		}()
